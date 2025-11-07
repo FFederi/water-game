@@ -1,9 +1,12 @@
-import { Physics, CuboidCollider } from '@react-three/rapier'
-import { RigidBody } from '@react-three/rapier'
-import { OrbitControls } from '@react-three/drei'
+import { CuboidCollider, interactionGroups } from '@react-three/rapier'
+import { RigidBody, useRapier } from '@react-three/rapier'
+import { OrbitControls, useKeyboardControls } from '@react-three/drei'
 import { Vector3 } from 'three'
 import type { Euler } from '@react-three/fiber'
+import { useMemo } from 'react'
+import WaterPump from './WaterPump.tsx'
 
+//TODO: remove the test container
 export function Container() {
 
   const wallLength = 6
@@ -15,10 +18,16 @@ export function Container() {
     {/* bottom wall */}
     <RigidBody
       type="kinematicPosition"
+      restitution={1}
+      friction={0.1}
+      linearDamping={0}
+      angularDamping={0}
+      collisionGroups={interactionGroups([0], [0])}
     >
       <mesh
-        scale={[wallLength, wallHeight, wallWidth]}
+        scale={[wallLength * 1.2, wallHeight, wallWidth]}
         position={[0, -3, 0]}
+        rotation={[0, 0, -Math.PI * 0.14]}
       >
         <boxGeometry />
         <meshStandardMaterial color="yellow" />
@@ -43,7 +52,7 @@ export function Container() {
       type="kinematicPosition"
     >
       <mesh
-        scale={[wallHeight, wallLength, wallWidth]}
+        scale={[wallHeight, wallLength * 1.5, wallWidth]}
         position={[2.9, 0, 0]}
       >
         <boxGeometry />
@@ -55,10 +64,12 @@ export function Container() {
     <CuboidCollider
       args={[4, 4, 0.5]}
       position={[0, 0, -wallWidth]}
+      collisionGroups={interactionGroups([0], [0])}
     />
     <CuboidCollider
       args={[4, 4, 0.5]}
       position={[0, 0, wallWidth]}
+      collisionGroups={interactionGroups([0], [0])}
     />
   </>
 }
@@ -68,58 +79,61 @@ type RingProps = {
   rotation: Euler
 }
 
-export function Ring({ position, rotation }: RingProps) {
-
-  return <>
-    <RigidBody
-      colliders="hull"
-      position={position}
-      rotation={rotation}
-      linearDamping={5}
-      angularDamping={3}
-      gravityScale={0.5}
-    >
-      <mesh
-        scale={0.1}
-      >
-        <torusGeometry />
-        <meshStandardMaterial color="hotpink" />
-      </mesh>
-    </RigidBody>
-  </>
-}
-
 export default function WaterGame({ ringsNumber = 20 }) {
+  const rings = useMemo(() => {
 
-  const ringPositions = Array.from(
-    { length: ringsNumber },
-    (_, i) => new Vector3(Math.random() * 2, Math.random() * 4 + 2, Math.random() / 2));
+    const rings: RingProps[] = Array.from(
+      { length: ringsNumber },
+      (_) => ({
+        position: new Vector3(Math.random() * 4 - 2, Math.random() * 4 + 2, Math.random() / 2),
+        rotation: [1, Math.random(), Math.random()] as Euler
+      })
+    )
+
+    return rings.map((ring, i) => (
+      <RigidBody
+        key={i}
+        colliders="hull"
+        position={ring.position}
+        rotation={ring.rotation}
+        linearDamping={5}
+        angularDamping={10}
+        gravityScale={0.5}
+        restitution={0}
+        friction={0.1}
+        canSleep={false}
+        collisionGroups={interactionGroups([0, 1], [0, 1])}
+      >
+        <mesh
+          scale={0.1}
+        >
+          <torusGeometry />
+          <meshStandardMaterial color="hotpink" />
+        </mesh>
+      </RigidBody>
+    ))
+
+  }, [])
 
   return <>
     <OrbitControls />
-    <Physics
-    >
-      <directionalLight
-        castShadow
-        position={[4, 4, 1]}
-        intensity={1.5}
-        shadow-mapSize={[1024, 1024]}
-        shadow-camera-near={1}
-        shadow-camera-far={10}
-        shadow-camera-top={10}
-        shadow-camera-right={10}
-        shadow-camera-bottom={- 10}
-        shadow-camera-left={- 10}
-      />
-      <ambientLight intensity={1.5} />
+    <directionalLight
+      castShadow
+      position={[4, 4, 1]}
+      intensity={1.5}
+      shadow-mapSize={[1024, 1024]}
+      shadow-camera-near={1}
+      shadow-camera-far={10}
+      shadow-camera-top={10}
+      shadow-camera-right={10}
+      shadow-camera-bottom={- 10}
+      shadow-camera-left={- 10}
+    />
+    <ambientLight intensity={1.5} />
 
-      {ringPositions.map((pos, i) => (
-        <Ring key={i} position={pos} rotation={[1, Math.random(), Math.random()]} />
-      ))}
+    {rings}
+    <WaterPump debug={false} />
 
-      <Container />
-
-    </Physics>
-
+    <Container />
   </>
 }
