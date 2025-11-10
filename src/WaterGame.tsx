@@ -36,11 +36,9 @@ export function Container({ wallHeight, wallLength, wallThickness }) {
       angularDamping={0}
       collisionGroups={interactionGroups([0], [0])}
     >
-      <mesh
-        scale={[1, 1, 2]}
-      >
+      <mesh>
         <extrudeGeometry
-          args={[bottomShape, { bevelEnabled: false }]}
+          args={[bottomShape, extrudeSettings]}
         />
         <meshStandardMaterial color="yellow" />
       </mesh>
