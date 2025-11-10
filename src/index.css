@@ -21,3 +21,14 @@ body,
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+.interface button{
+  position: fixed;
+  bottom: 10vh;
+  left: 10vw;
+  width: 15vh;
+  height: 15vh;
+  border-radius: 50%;
+  border: 1px solid black;
+  box-shadow: 0 0 3px gray;
+}

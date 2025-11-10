@@ -24,34 +24,43 @@ function PulseBox({ position, rotation, radius, debug }) {
 
   useEffect(() => {
 
-    const unsubscribePump = subscribeKeys(
+    const unsubscribePumpKey = subscribeKeys(
       // selector
       (state) =>
         state.leftpump,
       (value) => {
         if (value) {
           startPump()
-          setActive(true)
-          setTimeout(() => {
-            if (sphere.current) applyImpulseSphere()
-          }, 50)
         }
       })
 
+    const unsubscribePumpButton = useGame.subscribe((state) => state.pumpPhase,
+      (phase) => {
+        if (phase === 'pumping')
+          setActive(true)
+        setTimeout(() => {
+          if (sphere.current) applyImpulseSphere()
+        }, 50)
+      }
+    )
+
     return () => {
-      unsubscribePump()
+      unsubscribePumpKey()
+      unsubscribePumpButton()
     }
   }, [])
 
   useFrame((state, delta) => {
 
-    const gameState = useGame.getState()
-    const elapsedTime = Date.now() - gameState.startTime
+    if (active) {
+      const gameState = useGame.getState()
+      const elapsedTime = Date.now() - gameState.startTime
 
-    // stop the pump after 0.8 seconds
-    if (elapsedTime > 800) {
-      endPump()
-      setActive(false)
+      // stop the pump after 0.8 seconds
+      if (elapsedTime > 800) {
+        endPump()
+        setActive(false)
+      }
     }
 
     if (!active && sphere.current) {

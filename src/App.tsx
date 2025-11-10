@@ -2,6 +2,7 @@ import { Canvas } from '@react-three/fiber'
 import WaterGame from './WaterGame.tsx'
 import { KeyboardControls } from '@react-three/drei'
 import { Physics } from '@react-three/rapier'
+import Interface from './Interface.tsx'
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
             <WaterGame />
           </Physics>
         </Canvas>
+        <Interface />
       </KeyboardControls>
     </>
   )
