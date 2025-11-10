@@ -1,13 +1,9 @@
 import { useKeyboardControls } from '@react-three/drei'
 import { interactionGroups } from '@react-three/rapier'
 import { RigidBody } from '@react-three/rapier'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useRef, useState, useEffect } from 'react'
 import useGame from './stores/useGame.ts'
-
-type WaterPumpProps = {
-  debug: boolean;
-}
 
 function PulseBox({ position, rotation, radius, debug }) {
 
@@ -19,7 +15,7 @@ function PulseBox({ position, rotation, radius, debug }) {
   const [active, setActive] = useState(false)
 
   const applyImpulseSphere = () => {
-    sphere.current.setTranslation({ x: position.x, y: position.y - 2, z: position.z }, true)
+    sphere.current.setTranslation({ x: position.x, y: position.y + 0.5, z: position.z }, true)
 
     if (sphere.current) {
       sphere.current.setLinvel({ x: 0, y: 4, z: 0 })
@@ -52,15 +48,15 @@ function PulseBox({ position, rotation, radius, debug }) {
     const gameState = useGame.getState()
     const elapsedTime = Date.now() - gameState.startTime
 
-    // stop the pump after 1 second
-    if (elapsedTime > 1000) {
+    // stop the pump after 0.8 seconds
+    if (elapsedTime > 800) {
       endPump()
       setActive(false)
     }
 
     if (!active && sphere.current) {
       //move the sphere out of sight
-      sphere.current.setTranslation({ x: position.x, y: position.y - 4, z: position.z }, true)
+      sphere.current.setTranslation({ x: position.x, y: position.y, z: position.z }, true)
     }
 
   })
@@ -90,14 +86,19 @@ function PulseBox({ position, rotation, radius, debug }) {
   </>
 }
 
-export default function WaterPump({ debug = false }: WaterPumpProps) {
+type WaterPumpProps = {
+  debug: boolean;
+  spherePosition: { x: number, y: number, z: number }
+}
+
+export default function WaterPump({ debug = false, spherePosition }: WaterPumpProps) {
 
   return <>
 
     <PulseBox
-      position={{ x: 1.5, y: -2.3, z: 0 }}
+      position={spherePosition}
       rotation={{ x: Math.PI, y: 0, z: 0 }}
-      radius={0.5}
+      radius={-spherePosition.z * 0.7}
       debug={debug}
     />
   </>

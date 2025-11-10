@@ -1,24 +1,35 @@
 import { CuboidCollider, interactionGroups, RigidBody, useRapier } from '@react-three/rapier'
+import { Vector3, Shape } from 'three'
 import { OrbitControls, useKeyboardControls } from '@react-three/drei'
-import { Vector3 } from 'three'
 import type { Euler } from '@react-three/fiber'
 import { useThree } from '@react-three/fiber'
 import { useMemo } from 'react'
 import WaterPump from './WaterPump.tsx'
 
-export function Container() {
-  const { viewport } = useThree()
+export function Container({ wallHeight, wallLength, wallThickness }) {
 
-  const wallLength = viewport.width
-  const wallHeight = viewport.height
-  const wallThickness = 2
+  const bottomShape = useMemo(() => {
+    const shape = new Shape();
+    shape.moveTo(0, 0);
+    shape.lineTo(0, wallHeight * 0.5);
+    shape.lineTo(wallLength * 0.7, 0);
+    shape.lineTo(wallLength, 0);
+    shape.lineTo(0, 0);
+    return shape;
+  }, [wallHeight, wallLength]);
+
+  const extrudeSettings = useMemo(() => ({
+    depth: wallThickness,
+    bevelEnabled: false
+  }), [wallThickness]);
 
   return <>
 
     {/* bottom wall */}
     <RigidBody
+      colliders="trimesh"
       type="kinematicPosition"
-      position={[0, -wallHeight / 2 - wallThickness / 2, -wallThickness / 2]}
+      position={[-wallLength / 2, -wallHeight / 2, -wallThickness]}
       restitution={1}
       friction={0.1}
       linearDamping={0}
@@ -26,30 +37,15 @@ export function Container() {
       collisionGroups={interactionGroups([0], [0])}
     >
       <mesh
-        scale={[wallLength, wallThickness, wallThickness]}
+        scale={[1, 1, 2]}
       >
-        <boxGeometry />
+        <extrudeGeometry
+          args={[bottomShape, { bevelEnabled: false }]}
+        />
         <meshStandardMaterial color="yellow" />
       </mesh>
     </RigidBody>
 
-    <RigidBody
-      type="kinematicPosition"
-      position={[-wallLength / 20, -wallHeight / 2 - wallThickness / 2, -wallThickness / 2]}
-      rotation={[0, 0, Math.PI * -0.2]}
-      restitution={1}
-      friction={0.1}
-      linearDamping={0}
-      angularDamping={0}
-      collisionGroups={interactionGroups([0], [0])}
-    >
-      <mesh
-        scale={[wallLength * 2, wallThickness, wallThickness]}
-      >
-        <boxGeometry />
-        <meshStandardMaterial color="yellow" />
-      </mesh>
-    </RigidBody>
     {/* left wall */}
     <RigidBody
       type="kinematicPosition"
@@ -120,6 +116,12 @@ type RingProps = {
 
 export default function WaterGame({ ringsNumber = 20 }) {
 
+  const { viewport } = useThree()
+
+  const wallLength = viewport.width
+  const wallHeight = viewport.height
+  const wallThickness = 2
+
   //TODO: scale rings size and spawn position based on viewport
   const rings = useMemo(() => {
 
@@ -146,7 +148,7 @@ export default function WaterGame({ ringsNumber = 20 }) {
         collisionGroups={interactionGroups([0, 1], [0, 1])}
       >
         <mesh
-          scale={0.1}
+          scale={0.25}
         >
           <torusGeometry />
           <meshStandardMaterial color="hotpink" />
@@ -173,8 +175,20 @@ export default function WaterGame({ ringsNumber = 20 }) {
     <ambientLight intensity={1.5} />
 
     {rings}
-    <WaterPump debug={true} />
+    <WaterPump
+      debug={false}
+      spherePosition={{
+        x: wallLength / 3,
+        y: -wallHeight,
+        z: -wallThickness / 2
+      }}
 
-    <Container />
+    />
+
+    <Container
+      wallHeight={wallHeight}
+      wallLength={wallLength}
+      wallThickness={wallThickness}
+    />
   </>
 }
