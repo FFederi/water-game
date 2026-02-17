@@ -6,6 +6,26 @@ import { useRef, useState, useEffect } from 'react'
 import useGame from './stores/useGame.ts'
 import type { WaterPumpProps } from './types'
 
+type TurbulenceEntry = {
+  impulses: { x: number; y: number; z: number }[]
+  currentIndex: number
+  elapsed: number
+}
+
+function generateTurbulenceImpulses(mass: number): { x: number; y: number; z: number }[] {
+  const count = 6 + Math.floor(Math.random() * 3) // 6-8 impulses
+  const impulses: { x: number; y: number; z: number }[] = []
+  for (let i = 0; i < count; i++) {
+    const decay = Math.pow(1 - i / count, 2)
+    impulses.push({
+      x: -0.004 * mass * decay * (0.7 + Math.random() * 0.6),
+      y: 0,
+      z: (Math.random() - 0.5) * 0.02 * mass * decay,
+    })
+  }
+  return impulses
+}
+
 export default function WaterPump({
   debug = false,
   nozzlePosition,
@@ -22,6 +42,8 @@ export default function WaterPump({
   const [active, setActive] = useState(false)
   const elapsedRef = useRef(0)
   const overlappingBodies = useRef<Set<RapierRigidBody>>(new Set())
+  const turbulenceMap = useRef<Map<RapierRigidBody, TurbulenceEntry>>(new Map())
+  const referenceMass = useRef<number | null>(null)
 
   const halfWidth = zoneWidth / 2
   const halfHeight = zoneHeight / 2
@@ -74,18 +96,49 @@ export default function WaterPump({
           overlappingBodies.current.delete(body)
           return
         }
+        const mass = body.mass()
+        if (referenceMass.current === null) referenceMass.current = mass
+        const massRatio = mass / referenceMass.current
         const bodyPos = body.translation()
         const normalizedHeight = Math.max(0, Math.min(1, (bodyPos.y - nozzleY) / zoneHeight))
         const verticalFalloff = Math.pow(1 - normalizedHeight, 3)
         const horizontalDist = Math.abs(bodyPos.x - nozzlePosition.x) / halfWidth
         const lateralFalloff = Math.pow(1 - Math.min(1, horizontalDist), 2)
-        const attenuatedForce = force * verticalFalloff * lateralFalloff
+        const attenuatedForce = force * massRatio * verticalFalloff * lateralFalloff
         const normalizedX = (bodyPos.x - nozzlePosition.x) / halfWidth
         const jitter = Math.random() < 0.5 ? 0 : 0.8 + Math.random() * 0.4
         const horizontalForce = -attenuatedForce * 0.3 * (1 - normalizedX) * jitter
         body.applyImpulse({ x: horizontalForce * delta, y: attenuatedForce * delta, z: 0 }, true)
+
+        // Register turbulence for this body if not already tracked
+        if (!turbulenceMap.current.has(body)) {
+          turbulenceMap.current.set(body, {
+            impulses: generateTurbulenceImpulses(massRatio),
+            currentIndex: 0,
+            elapsed: 0,
+          })
+        }
       })
     }
+
+    // Apply turbulence impulses (runs even when pump is inactive)
+    const TURBULENCE_INTERVAL = 0.15 // 150ms between impulses
+    turbulenceMap.current.forEach((entry, body) => {
+      if (!body.isValid()) {
+        turbulenceMap.current.delete(body)
+        return
+      }
+      entry.elapsed += delta
+      if (entry.elapsed >= TURBULENCE_INTERVAL) {
+        entry.elapsed -= TURBULENCE_INTERVAL
+        const impulse = entry.impulses[entry.currentIndex]
+        body.applyImpulse(impulse, true)
+        entry.currentIndex++
+        if (entry.currentIndex >= entry.impulses.length) {
+          turbulenceMap.current.delete(body)
+        }
+      }
+    })
   })
 
   return (
