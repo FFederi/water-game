@@ -102,9 +102,6 @@ export function Container({ wallHeight, wallLength, wallThickness, wireframe = f
   )
 }
 
-const BASE_HEIGHT = 8
-const BASE_WIDTH = BASE_HEIGHT * (9 / 16)
-
 export default function WaterGame({ debug }: { debug: DebugControls }) {
   const { viewport } = useThree()
 
@@ -161,16 +158,18 @@ export default function WaterGame({ debug }: { debug: DebugControls }) {
       ))}
 
       <WaterPump
-        key={`pump-${debug.pumpSphereSize}`}
-        debug={debug.showPumpSphere}
-        spherePosition={{
+        key={`pump-${debug.pumpZoneWidth}-${debug.pumpZoneHeight}`}
+        debug={debug.showPumpZone}
+        nozzlePosition={{
           x: wallLength / 3,
-          y: -wallHeight,
+          y: -wallHeight / 2,
           z: -wallThickness / 2
         }}
-        velocity={debug.velocity}
+        force={debug.force}
         duration={debug.duration}
-        sphereSize={debug.pumpSphereSize}
+        zoneWidth={debug.pumpZoneWidth}
+        zoneHeight={debug.pumpZoneHeight}
+        zoneDepth={wallThickness * 0.9}
       />
 
       <Container

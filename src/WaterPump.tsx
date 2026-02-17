@@ -1,29 +1,37 @@
 import { useKeyboardControls } from '@react-three/drei'
-import { interactionGroups, RigidBody } from '@react-three/rapier'
+import { CuboidCollider, interactionGroups, RigidBody } from '@react-three/rapier'
+import type { RapierRigidBody } from '@react-three/rapier'
 import { useFrame } from '@react-three/fiber'
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import useGame from './stores/useGame.ts'
 import type { WaterPumpProps } from './types'
 
-export default function WaterPump({ debug = false, spherePosition, velocity = 4, duration = 800, sphereSize }: WaterPumpProps) {
-  const sphere = useRef(null)
+export default function WaterPump({
+  debug = false,
+  nozzlePosition,
+  force = 4,
+  duration = 800,
+  zoneWidth = 0.7,
+  zoneHeight = 4,
+  zoneDepth = 0.7,
+}: WaterPumpProps) {
   const [subscribeKeys] = useKeyboardControls()
   const startPump = useGame((state) => state.start)
   const endPump = useGame((state) => state.end)
 
   const [active, setActive] = useState(false)
   const elapsedRef = useRef(0)
+  const overlappingBodies = useRef<Set<RapierRigidBody>>(new Set())
 
-  const position = spherePosition
-  const rotation = { x: Math.PI, y: 0, z: 0 }
-  const radius = sphereSize ?? -spherePosition.z * 0.7
+  const halfWidth = zoneWidth / 2
+  const halfHeight = zoneHeight / 2
+  const halfDepth = zoneDepth / 2
 
-  const applyImpulseSphereRef = useRef<() => void>(() => {})
-  applyImpulseSphereRef.current = useCallback(() => {
-    if (!sphere.current) return
-    sphere.current.setTranslation({ x: position.x, y: position.y + 0.5, z: position.z }, true)
-    sphere.current.setLinvel({ x: 0, y: velocity, z: 0 })
-  }, [position, velocity])
+  const zoneCenter = {
+    x: nozzlePosition.x,
+    y: nozzlePosition.y + halfHeight,
+    z: nozzlePosition.z,
+  }
 
   useEffect(() => {
     const unsubscribePumpKey = subscribeKeys(
@@ -40,9 +48,6 @@ export default function WaterPump({ debug = false, spherePosition, velocity = 4,
       (phase) => {
         if (phase === 'pumping') {
           setActive(true)
-          setTimeout(() => {
-            applyImpulseSphereRef.current()
-          }, 50)
         }
       }
     )
@@ -60,36 +65,60 @@ export default function WaterPump({ debug = false, spherePosition, velocity = 4,
         endPump()
         setActive(false)
         elapsedRef.current = 0
+        return
       }
-    }
 
-    if (!active && sphere.current) {
-      sphere.current.setTranslation({ x: position.x, y: position.y, z: position.z }, true)
+      const nozzleY = nozzlePosition.y
+      overlappingBodies.current.forEach((body) => {
+        if (!body.isValid()) {
+          overlappingBodies.current.delete(body)
+          return
+        }
+        const bodyPos = body.translation()
+        const normalizedHeight = Math.max(0, Math.min(1, (bodyPos.y - nozzleY) / zoneHeight))
+        const verticalFalloff = Math.pow(1 - normalizedHeight, 3)
+        const horizontalDist = Math.abs(bodyPos.x - nozzlePosition.x) / halfWidth
+        const lateralFalloff = Math.pow(1 - Math.min(1, horizontalDist), 2)
+        const attenuatedForce = force * verticalFalloff * lateralFalloff
+        const normalizedX = (bodyPos.x - nozzlePosition.x) / halfWidth
+        const jitter = Math.random() < 0.5 ? 0 : 0.8 + Math.random() * 0.4
+        const horizontalForce = -attenuatedForce * 0.3 * (1 - normalizedX) * jitter
+        body.applyImpulse({ x: horizontalForce * delta, y: attenuatedForce * delta, z: 0 }, true)
+      })
     }
   })
 
   return (
     <RigidBody
-      ref={sphere}
-      position={[position.x, position.y, position.z]}
-      rotation={[rotation.x, rotation.y, rotation.z]}
-      colliders="ball"
-      restitution={10}
-      friction={0}
-      linearDamping={0.5}
-      angularDamping={0.5}
-      gravityScale={0}
-      canSleep={false}
+      type="fixed"
+      position={[zoneCenter.x, zoneCenter.y, zoneCenter.z]}
       collisionGroups={interactionGroups([1], [1])}
     >
-      <mesh>
-        <sphereGeometry args={[radius]} />
-        <meshStandardMaterial
-          transparent={!debug}
-          opacity={0.0}
-          wireframe
-        />
-      </mesh>
+      <CuboidCollider
+        args={[halfWidth, halfHeight, halfDepth]}
+        sensor
+        onIntersectionEnter={(payload) => {
+          if (payload.other.rigidBody) {
+            overlappingBodies.current.add(payload.other.rigidBody)
+          }
+        }}
+        onIntersectionExit={(payload) => {
+          if (payload.other.rigidBody) {
+            overlappingBodies.current.delete(payload.other.rigidBody)
+          }
+        }}
+      />
+      {debug && (
+        <mesh>
+          <boxGeometry args={[zoneWidth, zoneHeight, zoneDepth]} />
+          <meshStandardMaterial
+            transparent
+            opacity={0.3}
+            wireframe
+            color="cyan"
+          />
+        </mesh>
+      )}
     </RigidBody>
   )
 }

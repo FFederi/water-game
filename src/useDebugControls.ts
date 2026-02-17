@@ -4,23 +4,24 @@ export const isDebugMode = window.location.pathname.includes('/debug')
 
 const DEFAULTS = {
   wireframe: false,
-  showPumpSphere: false,
+  showPumpZone: false,
   physicsDebug: false,
   count: 20,
   size: 0.25,
   linearDamping: 5,
   angularDamping: 10,
   gravityScale: 0.5,
-  velocity: 4,
+  force: 4,
   duration: 800,
-  pumpSphereSize: 0.7,
+  pumpZoneWidth: 0.7,
+  pumpZoneHeight: 4,
 } as const
 
 export default function useDebugControls() {
   const controls = useControls({
     Rendering: folder({
       wireframe: false,
-      showPumpSphere: false,
+      showPumpZone: false,
       physicsDebug: false,
     }),
     Rings: folder({
@@ -31,9 +32,10 @@ export default function useDebugControls() {
       gravityScale: { value: 0.5, min: 0, max: 2 },
     }),
     Pump: folder({
-      velocity: { value: 4, min: 0, max: 20 },
+      force: { value: 4, min: 0, max: 20 },
       duration: { value: 800, min: 100, max: 2000, step: 50 },
-      pumpSphereSize: { value: 0.7, min: 0.1, max: 2, step: 0.05 },
+      pumpZoneWidth: { value: 0.7, min: 0.1, max: 2, step: 0.05 },
+      pumpZoneHeight: { value: 4, min: 0.5, max: 10, step: 0.25 },
     }),
   })
 
