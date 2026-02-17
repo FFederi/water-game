@@ -7,6 +7,7 @@ const DEFAULTS = {
   showPumpSphere: false,
   physicsDebug: false,
   count: 20,
+  size: 0.25,
   linearDamping: 5,
   angularDamping: 10,
   gravityScale: 0.5,
@@ -23,6 +24,7 @@ export default function useDebugControls() {
     }),
     Rings: folder({
       count: { value: 20, min: 1, max: 50, step: 1 },
+      size: { value: 0.25, min: 0.05, max: 1, step: 0.05 },
       linearDamping: { value: 5, min: 0, max: 20 },
       angularDamping: { value: 10, min: 0, max: 20 },
       gravityScale: { value: 0.5, min: 0, max: 2 },

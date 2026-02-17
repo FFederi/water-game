@@ -25,6 +25,7 @@ export interface DebugControls {
   showPumpSphere: boolean
   physicsDebug: boolean
   count: number
+  size: number
   linearDamping: number
   angularDamping: number
   gravityScale: number

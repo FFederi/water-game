@@ -153,6 +153,7 @@ export default function WaterGame({ debug }: { debug: DebugControls }) {
           position={ring.position}
           rotation={ring.rotation}
           wireframe={debug.wireframe}
+          size={debug.size}
           linearDamping={debug.linearDamping}
           angularDamping={debug.angularDamping}
           gravityScale={debug.gravityScale}

@@ -4,6 +4,7 @@ import type { RingData } from './types'
 
 interface RingProps extends RingData {
   wireframe?: boolean
+  size?: number
   linearDamping?: number
   angularDamping?: number
   gravityScale?: number
@@ -13,6 +14,7 @@ export default function Ring({
   position,
   rotation,
   wireframe = false,
+  size = 0.25,
   linearDamping = 5,
   angularDamping = 10,
   gravityScale = 0.5,
@@ -30,7 +32,7 @@ export default function Ring({
       canSleep={false}
       collisionGroups={interactionGroups([0, 1], [0, 1])}
     >
-      <mesh scale={0.25}>
+      <mesh scale={size}>
         <torusGeometry />
         <meshStandardMaterial color="hotpink" wireframe={wireframe} />
       </mesh>
