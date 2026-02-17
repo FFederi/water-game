@@ -111,7 +111,7 @@ export default function WaterGame({ debug }: { debug: DebugControls }) {
   const aspectRatio = 9 / 16
   const wallHeight = viewport.height
   const wallLength = wallHeight * aspectRatio
-  const wallThickness = 2
+  const wallThickness = 0.8
 
   const spawnWidth = wallLength * 0.8
   const spawnDepth = wallThickness * 0.8
@@ -122,7 +122,7 @@ export default function WaterGame({ debug }: { debug: DebugControls }) {
       () => ({
         position: {
           x: Math.random() * spawnWidth - spawnWidth / 2,
-          y: Math.random() * 4 + 2,
+          y: Math.random() * 2 + 1,
           z: -(Math.random() * spawnDepth),
         },
         rotation: [1, Math.random(), Math.random()],
