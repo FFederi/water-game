@@ -18,6 +18,7 @@ export interface WaterPumpProps {
   spherePosition: Vec3
   velocity?: number
   duration?: number
+  sphereSize?: number
 }
 
 export interface DebugControls {
@@ -31,6 +32,7 @@ export interface DebugControls {
   gravityScale: number
   velocity: number
   duration: number
+  pumpSphereSize: number
 }
 
 export type PumpPhase = 'ready' | 'pumping'

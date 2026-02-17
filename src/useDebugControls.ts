@@ -13,6 +13,7 @@ const DEFAULTS = {
   gravityScale: 0.5,
   velocity: 4,
   duration: 800,
+  pumpSphereSize: 0.7,
 } as const
 
 export default function useDebugControls() {
@@ -32,6 +33,7 @@ export default function useDebugControls() {
     Pump: folder({
       velocity: { value: 4, min: 0, max: 20 },
       duration: { value: 800, min: 100, max: 2000, step: 50 },
+      pumpSphereSize: { value: 0.7, min: 0.1, max: 2, step: 0.05 },
     }),
   })
 

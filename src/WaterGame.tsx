@@ -149,7 +149,7 @@ export default function WaterGame({ debug }: { debug: DebugControls }) {
 
       {rings.map((ring, i) => (
         <Ring
-          key={i}
+          key={`ring-${i}-${debug.size}-${debug.linearDamping}-${debug.angularDamping}-${debug.gravityScale}`}
           position={ring.position}
           rotation={ring.rotation}
           wireframe={debug.wireframe}
@@ -161,6 +161,7 @@ export default function WaterGame({ debug }: { debug: DebugControls }) {
       ))}
 
       <WaterPump
+        key={`pump-${debug.pumpSphereSize}`}
         debug={debug.showPumpSphere}
         spherePosition={{
           x: wallLength / 3,
@@ -169,6 +170,7 @@ export default function WaterGame({ debug }: { debug: DebugControls }) {
         }}
         velocity={debug.velocity}
         duration={debug.duration}
+        sphereSize={debug.pumpSphereSize}
       />
 
       <Container

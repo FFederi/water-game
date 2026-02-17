@@ -5,7 +5,7 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import useGame from './stores/useGame.ts'
 import type { WaterPumpProps } from './types'
 
-export default function WaterPump({ debug = false, spherePosition, velocity = 4, duration = 800 }: WaterPumpProps) {
+export default function WaterPump({ debug = false, spherePosition, velocity = 4, duration = 800, sphereSize }: WaterPumpProps) {
   const sphere = useRef(null)
   const [subscribeKeys] = useKeyboardControls()
   const startPump = useGame((state) => state.start)
@@ -16,7 +16,7 @@ export default function WaterPump({ debug = false, spherePosition, velocity = 4,
 
   const position = spherePosition
   const rotation = { x: Math.PI, y: 0, z: 0 }
-  const radius = -spherePosition.z * 0.7
+  const radius = sphereSize ?? -spherePosition.z * 0.7
 
   const applyImpulseSphereRef = useRef<() => void>(() => {})
   applyImpulseSphereRef.current = useCallback(() => {
