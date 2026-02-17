@@ -5,7 +5,7 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import useGame from './stores/useGame.ts'
 import type { WaterPumpProps } from './types'
 
-export default function WaterPump({ debug = false, spherePosition }: WaterPumpProps) {
+export default function WaterPump({ debug = false, spherePosition, velocity = 4, duration = 800 }: WaterPumpProps) {
   const sphere = useRef(null)
   const [subscribeKeys] = useKeyboardControls()
   const startPump = useGame((state) => state.start)
@@ -22,8 +22,8 @@ export default function WaterPump({ debug = false, spherePosition }: WaterPumpPr
   applyImpulseSphereRef.current = useCallback(() => {
     if (!sphere.current) return
     sphere.current.setTranslation({ x: position.x, y: position.y + 0.5, z: position.z }, true)
-    sphere.current.setLinvel({ x: 0, y: 4, z: 0 })
-  }, [position])
+    sphere.current.setLinvel({ x: 0, y: velocity, z: 0 })
+  }, [position, velocity])
 
   useEffect(() => {
     const unsubscribePumpKey = subscribeKeys(
@@ -56,7 +56,7 @@ export default function WaterPump({ debug = false, spherePosition }: WaterPumpPr
   useFrame((_state, delta) => {
     if (active) {
       elapsedRef.current += delta * 1000
-      if (elapsedRef.current > 800) {
+      if (elapsedRef.current > duration) {
         endPump()
         setActive(false)
         elapsedRef.current = 0

@@ -16,6 +16,20 @@ export interface ContainerProps {
 export interface WaterPumpProps {
   debug?: boolean
   spherePosition: Vec3
+  velocity?: number
+  duration?: number
+}
+
+export interface DebugControls {
+  wireframe: boolean
+  showPumpSphere: boolean
+  physicsDebug: boolean
+  count: number
+  linearDamping: number
+  angularDamping: number
+  gravityScale: number
+  velocity: number
+  duration: number
 }
 
 export type PumpPhase = 'ready' | 'pumping'

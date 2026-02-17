@@ -2,11 +2,16 @@ import { Canvas } from '@react-three/fiber'
 import WaterGame from './WaterGame.tsx'
 import { KeyboardControls } from '@react-three/drei'
 import { Physics } from '@react-three/rapier'
+import { Leva } from 'leva'
 import Interface from './Interface.tsx'
+import useDebugControls, { isDebugMode } from './useDebugControls.ts'
 
 export default function App() {
+  const debug = useDebugControls()
+
   return (
     <>
+      <Leva hidden={!isDebugMode} />
       <KeyboardControls
         map={[
           { name: 'leftpump', keys: ['ArrowLeft', 'KeyA'] },
@@ -23,8 +28,8 @@ export default function App() {
             position: [0, 0, 4]
           }}
         >
-          <Physics>
-            <WaterGame />
+          <Physics debug={debug.physicsDebug}>
+            <WaterGame debug={debug} />
           </Physics>
         </Canvas>
         <Interface />

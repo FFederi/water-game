@@ -5,15 +5,16 @@ import { useThree } from '@react-three/fiber'
 import { useMemo } from 'react'
 import WaterPump from './WaterPump.tsx'
 import Ring from './Ring.tsx'
-import type { ContainerProps, RingData } from './types'
+import type { ContainerProps, DebugControls, RingData } from './types'
 
 interface WallProps {
   position: [number, number, number]
   scale: [number, number, number]
   transparent?: boolean
+  wireframe?: boolean
 }
 
-function Wall({ position, scale, transparent = false }: WallProps) {
+function Wall({ position, scale, transparent = false, wireframe = false }: WallProps) {
   return (
     <RigidBody
       type="kinematicPosition"
@@ -26,13 +27,14 @@ function Wall({ position, scale, transparent = false }: WallProps) {
           color="yellow"
           transparent={transparent}
           opacity={transparent ? 0.0 : 1.0}
+          wireframe={wireframe}
         />
       </mesh>
     </RigidBody>
   )
 }
 
-export function Container({ wallHeight, wallLength, wallThickness }: ContainerProps) {
+export function Container({ wallHeight, wallLength, wallThickness, wireframe = false }: ContainerProps & { wireframe?: boolean }) {
   const bottomShape = useMemo(() => {
     const shape = new Shape();
     shape.moveTo(0, 0);
@@ -63,7 +65,7 @@ export function Container({ wallHeight, wallLength, wallThickness }: ContainerPr
       >
         <mesh>
           <extrudeGeometry args={[bottomShape, extrudeSettings]} />
-          <meshStandardMaterial color="yellow" />
+          <meshStandardMaterial color="yellow" wireframe={wireframe} />
         </mesh>
       </RigidBody>
 
@@ -71,12 +73,14 @@ export function Container({ wallHeight, wallLength, wallThickness }: ContainerPr
       <Wall
         position={[-wallLength / 2 - wallThickness / 2, 0, -wallThickness / 2]}
         scale={[wallThickness, wallHeight, wallThickness]}
+        wireframe={wireframe}
       />
 
       {/* right wall */}
       <Wall
         position={[wallLength / 2 + wallThickness / 2, 0, -wallThickness / 2]}
         scale={[wallThickness, wallHeight, wallThickness]}
+        wireframe={wireframe}
       />
 
       {/* back glass pane */}
@@ -84,6 +88,7 @@ export function Container({ wallHeight, wallLength, wallThickness }: ContainerPr
         position={[0, 0, -wallThickness - 0.5]}
         scale={[wallLength, wallHeight, 1]}
         transparent
+        wireframe={wireframe}
       />
 
       {/* front glass pane */}
@@ -91,12 +96,16 @@ export function Container({ wallHeight, wallLength, wallThickness }: ContainerPr
         position={[0, 0, 0.5]}
         scale={[wallLength, wallHeight, 1]}
         transparent
+        wireframe={wireframe}
       />
     </>
   )
 }
 
-export default function WaterGame({ ringsNumber = 20 }) {
+const BASE_HEIGHT = 8
+const BASE_WIDTH = BASE_HEIGHT * (9 / 16)
+
+export default function WaterGame({ debug }: { debug: DebugControls }) {
   const { viewport } = useThree()
 
   const aspectRatio = 9 / 16
@@ -109,7 +118,7 @@ export default function WaterGame({ ringsNumber = 20 }) {
 
   const rings = useMemo(() => {
     return Array.from<unknown, RingData>(
-      { length: ringsNumber },
+      { length: debug.count },
       () => ({
         position: {
           x: Math.random() * spawnWidth - spawnWidth / 2,
@@ -119,7 +128,7 @@ export default function WaterGame({ ringsNumber = 20 }) {
         rotation: [1, Math.random(), Math.random()],
       })
     )
-  }, [ringsNumber, spawnWidth, spawnDepth])
+  }, [debug.count, spawnWidth, spawnDepth])
 
   return (
     <>
@@ -139,22 +148,33 @@ export default function WaterGame({ ringsNumber = 20 }) {
       <ambientLight intensity={1.5} />
 
       {rings.map((ring, i) => (
-        <Ring key={i} position={ring.position} rotation={ring.rotation} />
+        <Ring
+          key={i}
+          position={ring.position}
+          rotation={ring.rotation}
+          wireframe={debug.wireframe}
+          linearDamping={debug.linearDamping}
+          angularDamping={debug.angularDamping}
+          gravityScale={debug.gravityScale}
+        />
       ))}
 
       <WaterPump
-        debug={false}
+        debug={debug.showPumpSphere}
         spherePosition={{
           x: wallLength / 3,
           y: -wallHeight,
           z: -wallThickness / 2
         }}
+        velocity={debug.velocity}
+        duration={debug.duration}
       />
 
       <Container
         wallHeight={wallHeight}
         wallLength={wallLength}
         wallThickness={wallThickness}
+        wireframe={debug.wireframe}
       />
     </>
   )

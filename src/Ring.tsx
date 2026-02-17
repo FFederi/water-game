@@ -2,15 +2,29 @@ import { RigidBody } from '@react-three/rapier'
 import { interactionGroups } from '@react-three/rapier'
 import type { RingData } from './types'
 
-export default function Ring({ position, rotation }: RingData) {
+interface RingProps extends RingData {
+  wireframe?: boolean
+  linearDamping?: number
+  angularDamping?: number
+  gravityScale?: number
+}
+
+export default function Ring({
+  position,
+  rotation,
+  wireframe = false,
+  linearDamping = 5,
+  angularDamping = 10,
+  gravityScale = 0.5,
+}: RingProps) {
   return (
     <RigidBody
       colliders="hull"
       position={[position.x, position.y, position.z]}
       rotation={rotation}
-      linearDamping={5}
-      angularDamping={10}
-      gravityScale={0.5}
+      linearDamping={linearDamping}
+      angularDamping={angularDamping}
+      gravityScale={gravityScale}
       restitution={0}
       friction={0.1}
       canSleep={false}
@@ -18,7 +32,7 @@ export default function Ring({ position, rotation }: RingData) {
     >
       <mesh scale={0.25}>
         <torusGeometry />
-        <meshStandardMaterial color="hotpink" />
+        <meshStandardMaterial color="hotpink" wireframe={wireframe} />
       </mesh>
     </RigidBody>
   )
